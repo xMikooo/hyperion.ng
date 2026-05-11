@@ -50,28 +50,6 @@ jobs:
       publish: true
       nightly: true
 
-  # Build macOS Artifacts
-  macos:
-    name: 🍏 macOS
-    if: ${{ needs.check.outputs.should_run == 'true' || inputs.forceRun }}
-    needs: [check]
-    uses: ./.github/workflows/macos.yml
-    secrets: inherit
-    with:
-      publish: true
-      nightly: true
-
-  # Build Windows Artifacts
-  windows:
-    name: 🪟 Windows
-    if: ${{ needs.check.outputs.should_run == 'true' || inputs.forceRun }}
-    needs: [check]
-    uses: ./.github/workflows/windows.yml
-    secrets: inherit
-    with:
-      publish: true
-      nightly: true
-
   # Publish to GitHub
   nightly:
     name: 🚀 Publish to GitHub
