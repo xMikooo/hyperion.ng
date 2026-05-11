@@ -54,7 +54,7 @@ jobs:
   nightly:
     name: 🚀 Publish to GitHub
     if: ${{ needs.check.outputs.should_run == 'true' || inputs.forceRun }}
-    needs: [check, linux, macos, windows]
+    needs: [check, linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
