@@ -72,7 +72,7 @@ bool LedDeviceWs2812SPI::init(const QJsonObject &deviceConfig)
 int LedDeviceWs2812SPI::write(const QVector<ColorRgb> &ledValues)
 {
 	unsigned spi_ptr = 0;
-	const int SPI_BYTES_PER_LED = sizeof(ColorRgb) * SPI_BYTES_PER_COLOUR;
+	const int SPI_BYTES_PER_LED = sizeof(ColorRgb) * SPI_BYTES_PER_COLOUR + 3;
 
 	for (const ColorRgb& color : ledValues)
 	{
@@ -90,7 +90,7 @@ int LedDeviceWs2812SPI::write(const QVector<ColorRgb> &ledValues)
 
 	for (int j=0; j < SPI_FRAME_END_LATCH_BYTES; j++)
 	{
-		_ledBuffer[spi_ptr] = 0;
+		_ledBuffer[spi_ptr] = 3;
 		++spi_ptr;
 	}
 
