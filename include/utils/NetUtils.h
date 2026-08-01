@@ -32,17 +32,57 @@ inline bool portAvailable(quint16& port, QSharedPointer<Logger> log)
 {
 	const quint16 prevPort = port;
 	QTcpServer server;
+	int failCount = 0;
+
 	while (!server.listen(QHostAddress::Any, port))
 	{
-		Warning(log,"Port '%d' is already in use, will increment", port);
-		port ++;
+		++failCount;
+		QAbstractSocket::SocketError err = server.serverError();
+		QString errString = server.errorString();
+
+		if (failCount == 1)
+		{
+			Warning(log, "Port '%d' binding failed. SocketError: %d (%s)",
+					port, err, QSTRING_CSTR(errString));
+		}
+		else
+		{
+			Debug(log, "Port '%d' binding failed. SocketError: %d (%s)",
+				  port, err, QSTRING_CSTR(errString));
+		}
+
+		// UnsupportedSocketOperationError typically means a system proxy rejected the
+		// bind (SOCKSv5 does not support listen). Aborting immediately if it occurs — no port will succeed.
+		if (err == QAbstractSocket::UnsupportedSocketOperationError)
+		{
+			Error(log, "Port '%d' bind rejected as unsupported operation (proxy?). Aborting port search.", port);
+			return false;
+		}
+
+		// On some platforms (notably Windows), certain ports fail with SocketAccessError
+		// due to OS/proxy reservations or exclusions while higher ports remain available.
+		if (err == QAbstractSocket::SocketAccessError)
+		{
+			Debug(log, "Port '%d' is reserved or excluded by the OS/Proxy, trying next port.", port);
+		}
+
+		if (port >= MAX_PORT)
+		{
+			Error(log, "Reached maximum port limit (%d).", MAX_PORT);
+			return false;
+		}
+
+		port++;
 	}
+
+	// Explicitly release the port now that we proved we could listen on it.
 	server.close();
-	if(port != prevPort)
+
+	if (port != prevPort)
 	{
-		Warning(log, "The requested Port '%d' is already in use, will use Port '%d' instead", prevPort, port);
-		return false;
+		Warning(log, "Requested Port '%d' was unavailable, will use Port '%d' instead", prevPort, port);
 	}
+
 	return true;
 }
 
